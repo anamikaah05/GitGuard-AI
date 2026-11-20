@@ -1,0 +1,52 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Node
+node_modules/
+backend/..frontend/node_modules/
+
+# Build outputs
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+# Training datasets
+ml/data/raw/
+ml/data/processed/
+
+# Development notebooks
+ml/notebooks/
+
+# Backup files
+*.backup
+
+# Local test script
+backend/test_webhook.py
+# ProwlBench raw datasets
+prowlbench/*.jsonl
+# External benchmark repository
+prowlbench/
