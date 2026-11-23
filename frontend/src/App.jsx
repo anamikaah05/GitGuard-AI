@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 
-const API_URL =  import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 function App() {
   // Navigation
@@ -21,7 +21,7 @@ function App() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
 
-  // Fetch real dashboard data from SQLite-backed APIs
+  // Fetch dashboard data
   useEffect(() => {
     if (activePage !== 'overview') return
 
@@ -60,7 +60,7 @@ function App() {
     setDashboardLoading(true)
     fetchDashboard()
 
-    // Refresh dashboard every 10 seconds
+    // Automatically refresh every 10 seconds
     const interval = setInterval(fetchDashboard, 10000)
 
     return () => {
@@ -93,6 +93,9 @@ function App() {
       }
 
       setResult(data)
+
+      // Refresh dashboard after a successful manual scan
+      setRefreshKey((key) => key + 1)
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.')
     } finally {
@@ -100,16 +103,45 @@ function App() {
     }
   }
 
+  // Risk-level CSS class
   const riskColor = (level) => {
-    if (level === 'HIGH') return 'high'
-    if (level === 'MEDIUM') return 'medium'
+    const normalizedLevel = String(level || '').toUpperCase()
+
+    if (normalizedLevel === 'HIGH') return 'high'
+    if (normalizedLevel === 'MEDIUM') return 'medium'
+
     return 'low'
   }
 
+  // Format date and time
   const formatDate = (date) => {
     if (!date) return 'Date unavailable'
 
-    return new Date(date).toLocaleString()
+    const parsedDate = new Date(date)
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return 'Date unavailable'
+    }
+
+    return parsedDate.toLocaleString()
+  }
+
+  // Convert confidence from decimal to percentage
+  const formatConfidence = (confidence) => {
+    if (confidence === null || confidence === undefined) {
+      return 'N/A'
+    }
+
+    return `${(Number(confidence) * 100).toFixed(2)}%`
+  }
+
+  // Get Pull Request number from GitHub URL
+  const getPRNumber = (url) => {
+    if (!url) return null
+
+    const match = url.match(/\/pull\/(\d+)/)
+
+    return match ? match[1] : null
   }
 
   return (
@@ -226,13 +258,20 @@ function App() {
                   </div>
                 </div>
 
-                {/* Recent activity */}
+                {/* Recent scan activity */}
                 <section className="activity-section">
+
                   <div className="activity-heading">
                     <div>
                       <h2>Recent Scan Activity</h2>
-                      <p>Latest GitHub push and Pull Request scans</p>
+                      <p>
+                        Latest GitHub push and Pull Request security scans
+                      </p>
                     </div>
+
+                    <span className="scan-count">
+                      {recentScans.length} recent scans
+                    </span>
                   </div>
 
                   {recentScans.length === 0 ? (
@@ -240,46 +279,147 @@ function App() {
                       No scan history available yet.
                     </p>
                   ) : (
-                    <div className="activity-list">
-                      {recentScans.map((scan) => (
-                        <div className="activity-item" key={scan.id}>
+                    <div className="activity-table-wrap">
+                      <table className="activity-table">
+                        <thead>
+                          <tr>
+                            <th>Repository / Event</th>
+                            <th>Secret Detection</th>
+                            <th>PR Risk</th>
+                            <th>ML Confidence</th>
+                            <th>Files</th>
+                            <th>Findings</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
 
-                          <div className="activity-main">
-                            <strong>
-                              {scan.repository || 'Unknown repository'}
-                            </strong>
+                        <tbody>
+                          {recentScans.map((scan) => {
+                            const isPR = scan.event_type === 'pull_request'
+                            const prNumber = getPRNumber(scan.pr_url)
 
-                            <span>
-                              {scan.event_type === 'pull_request'
-                                ? `Pull Request · ${scan.action || 'scan'}`
-                                : 'Push event'}
-                            </span>
+                            return (
+                              <tr key={scan.id}>
 
-                            <small>
-                              {scan.branch || 'Branch unavailable'}
-                              {' · '}
-                              {formatDate(scan.created_at)}
-                            </small>
-                          </div>
+                                {/* Repository and event */}
+                                <td>
+                                  <div className="table-repository">
+                                    <strong>
+                                      {scan.repository || 'Unknown repository'}
+                                    </strong>
 
-                          <div className="activity-status">
-                            <span className={
-                              scan.has_secret ? 'danger-text' : 'safe-text'
-                            }>
-                              {scan.has_secret ? 'Secret detected' : 'No secret'}
-                            </span>
+                                    <span className="event-label">
+                                      {isPR
+                                        ? `Pull Request · ${scan.action || 'scan'}`
+                                        : 'Push event'}
+                                    </span>
 
-                            {scan.risk_level && (
-                              <span className={riskColor(scan.risk_level)}>
-                                {scan.risk_level} risk
-                              </span>
-                            )}
-                          </div>
+                                    <small>
+                                      {scan.branch || 'Branch unavailable'}
+                                    </small>
+                                  </div>
+                                </td>
 
-                        </div>
-                      ))}
+                                {/* Secret detection */}
+                                <td>
+                                  <span className={
+                                    scan.has_secret
+                                      ? 'table-status danger-text'
+                                      : 'table-status safe-text'
+                                  }>
+                                    {scan.has_secret
+                                      ? '● Secret detected'
+                                      : '● No secret'}
+                                  </span>
+
+                                  <small className="table-subtext">
+                                    ML: {scan.ml_prediction || 'N/A'}
+                                  </small>
+
+                                  <small className="table-subtext">
+                                    Confidence: {formatConfidence(scan.secret_confidence)}
+                                  </small>
+                                </td>
+
+                                {/* PR risk */}
+                                <td>
+                                  {scan.risk_level ? (
+                                    <span className={`risk-badge ${riskColor(scan.risk_level)}`}>
+                                      {String(scan.risk_level).toUpperCase()}
+                                    </span>
+                                  ) : (
+                                    <span className="muted">N/A</span>
+                                  )}
+                                </td>
+
+                                {/* PR risk confidence */}
+                                <td>
+                                  {scan.risk_confidence !== null &&
+                                  scan.risk_confidence !== undefined
+                                    ? formatConfidence(scan.risk_confidence)
+                                    : 'N/A'}
+                                </td>
+
+                                {/* Files scanned */}
+                                <td>
+                                  {scan.files_scanned ?? 0}
+                                </td>
+
+                                {/* Rule and entropy findings */}
+                                <td>
+                                  <div className="finding-count">
+                                    <span>Rules: {scan.rule_findings ?? 0}</span>
+                                    <span>Entropy: {scan.entropy_findings ?? 0}</span>
+                                  </div>
+                                </td>
+
+                                {/* Scan status */}
+                                <td>
+                                  <span className={
+                                    scan.scan_status === 'completed'
+                                      ? 'scan-status-completed'
+                                      : 'scan-status-pending'
+                                  }>
+                                    {scan.scan_status || 'Unknown'}
+                                  </span>
+                                </td>
+
+                                {/* Date */}
+                                <td className="table-date">
+                                  {formatDate(scan.created_at)}
+                                </td>
+
+                                {/* GitHub action */}
+                                <td>
+                                  {isPR && scan.pr_url ? (
+                                    <a
+                                      className="github-link"
+                                      href={scan.pr_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      {prNumber ? `View PR #${prNumber}` : 'View PR'}
+                                      {' ↗'}
+                                    </a>
+                                  ) : (
+                                    <span className="muted">Push scan</span>
+                                  )}
+                                </td>
+
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
                     </div>
                   )}
+
+                  <p className="activity-auto-refresh">
+                    Dashboard automatically refreshes every 10 seconds.
+                  </p>
+
                 </section>
               </>
             )}

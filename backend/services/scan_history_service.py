@@ -41,7 +41,7 @@ def save_scan_history(
             risk_confidence=risk_confidence,
             files_scanned=files_scanned,
             files_skipped=files_skipped,
-            scan_details=json.dumps(scan_details) if scan_details else None,
+            scan_details=json.dumps(scan_details, default=str) if scan_details else None,
         )
 
         db.add(record)

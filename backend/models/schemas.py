@@ -32,7 +32,7 @@ class SecretScanRequest(BaseModel):
     text: Optional[str] = Field(
         default=None,
         description="Raw code/text snippet to scan for secrets.",
-        examples=["GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx"],
+        examples=["GitHub App authentication is configured in backend settings."],
     )
     github_url: Optional[str] = Field(
         default=None,
