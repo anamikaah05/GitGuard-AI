@@ -15,10 +15,18 @@ It integrates with GitHub through webhooks and provides automated security feedb
 ## 📸 Dashboard Preview
 
 ### Security Overview
-![GitGuard AI Dashboard - Part 1](dashboard-1.png)
+![GitGuard AI Dashboard - Part 1](dashboard1.png)
 
 ### Recent Scan Activity
-![GitGuard AI Dashboard - Part 2](dashboard-2.png)
+![GitGuard AI Dashboard - Part 2](dashboard2.png)
+
+### GitHub Pull Request Security Scan
+
+GitGuard AI automatically analyzes pull requests and posts security
+feedback with secret detection and risk assessment results.
+
+![GitGuard AI PR Scan](pr_scan.png)
+
 
 ## 🚀 Features
 
