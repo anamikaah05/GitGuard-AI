@@ -15,10 +15,10 @@ It integrates with GitHub through webhooks and provides automated security feedb
 ## 📸 Dashboard Preview
 
 ### Security Overview
-![GitGuard AI Dashboard - Part 1](dashboard1.png)
+![GitGuard AI Dashboard - Part 1](dashboard1.png.png)
 
 ### Recent Scan Activity
-![GitGuard AI Dashboard - Part 2](dashboard2.png)
+![GitGuard AI Dashboard - Part 2](dashboard2.png.png)
 
 ### GitHub Pull Request Security Scan
 
