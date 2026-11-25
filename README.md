@@ -12,6 +12,13 @@ It integrates with GitHub through webhooks and provides automated security feedb
 **Backend API:** https://gitguard-ai-fw9m.onrender.com
 
 ---
+## 📸 Dashboard Preview
+
+### Security Overview
+![GitGuard AI Dashboard - Part 1](dashboard-1.png)
+
+### Recent Scan Activity
+![GitGuard AI Dashboard - Part 2](dashboard-2.png)
 
 ## 🚀 Features
 
